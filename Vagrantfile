@@ -1,6 +1,10 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# Customization variables
+# -----------------------
+$domain_name = "vagrant.sample"
+
 # All Vagrant configuration is done below. The "2" in Vagrant.configure
 # configures the configuration version (we support older styles for
 # backwards compatibility). Please don't change it unless you know what
@@ -12,7 +16,9 @@ Vagrant.configure(2) do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  config.vm.box = "debian/stretch64"
+  # config.vm.box = "debian/stretch64" # is not able to use "private_network"
+  # config.vm.box = "amonteilhet/debian-stretch64" # virtualbox modules too modern
+  config.vm.box = "debian/jessie64"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -68,4 +74,27 @@ Vagrant.configure(2) do |config|
   #   sudo apt-get update
   #   sudo apt-get install -y apache2
   # SHELL
+
+  # Database machine
+  config.vm.define :db1 do |host|
+    host.vm.hostname = "db1.#{$domain_name}"
+    host.vm.network :private_network, ip: "192.168.5.11"
+    host.vm.provider "virtualbox" do |vbox|
+      # Number of CPUs
+      host = RbConfig::CONFIG['host_os']
+      if host =~ /darwin/
+        cpus = `sysctl -n hw.ncpu`.to_i
+      elsif host =~ /linux/
+        cpus = `nproc`.to_i
+      else # Windows or anything else ...
+        cpus = 2
+      end
+      vbox.memory = 512
+      vbox.cpus = cpus
+    end
+    # Here, we'll puppetize / ansibleize the machine.
+    config.vm.provision "shell", inline: "apt-get install --yes python-apt"
+  end
+
+
 end
