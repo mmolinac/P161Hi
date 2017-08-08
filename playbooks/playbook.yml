@@ -1,0 +1,25 @@
+---
+# All hosts
+- hosts: all
+  tasks:
+    - name: Update APT database
+      apt:
+        update_cache: yes
+        cache_valid_time: 10800
+      become: yes
+
+# Database host
+- hosts: db1
+  tasks:
+    - name: Install MySQL server
+      apt: name=mysql-server state=latest
+      become: yes
+
+# Front-end host
+- hosts: front1
+  tasks:
+    - name: Install rails
+      apt: name={{item}} state=latest
+      with_items:
+        - rails
+      become: yes
