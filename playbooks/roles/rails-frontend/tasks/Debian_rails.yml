@@ -1,0 +1,11 @@
+# Debian / Ubuntu
+  - name: Install Rails on Debian
+    apt: name={{item}} state=latest
+    with_items:
+      - rails
+      - mysql-client
+    become: yes
+
+  # - name: Rails service
+  #   service: name=rails enabled=yes state=started
+  #   become: yes
