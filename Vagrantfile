@@ -114,7 +114,6 @@ Vagrant.configure(2) do |config|
   end
 
   # Here, we'll puppetize / ansibleize every machine.
-  # config.vm.provision "shell", inline: "apt-get install --yes python-apt"
   config.vm.provision :ansible do |ansible|
     ansible.playbook = "playbooks/main.yml"
   end
