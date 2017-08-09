@@ -1,0 +1,22 @@
+---
+# All hosts
+- name: Update APT database
+  hosts: all
+  tasks:
+    - apt:
+        update_cache: yes
+        cache_valid_time: 10800
+      become: yes
+
+# Database hosts
+- hosts: db1
+  become: true
+  roles:
+    - mysql-database
+
+# Front-end hosts
+- name: Provisioning a Rails front-end host
+  hosts: front1
+  become: true
+  roles:
+    - rails-frontend
