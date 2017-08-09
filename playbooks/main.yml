@@ -15,8 +15,7 @@
     - mysql-database
 
 # Front-end hosts
-- name: Provisioning a Rails front-end host
-  hosts: front1
+- hosts: front1
   become: true
   roles:
     - rails-frontend
