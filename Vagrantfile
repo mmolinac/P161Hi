@@ -98,6 +98,8 @@ Vagrant.configure(2) do |config|
   config.vm.define :front1 do |host|
     host.vm.hostname = "front1.#{$domain_name}"
     host.vm.network :private_network, ip: "192.168.5.12"
+    # Port mapping for default Rails application
+    host.vm.network :forwarded_port, guest: 3000, guest_ip: "192.168.5.12", host: 3000, protocol: "tcp"
     host.vm.provider "virtualbox" do |vbox|
       # Number of CPUs
       host = RbConfig::CONFIG['host_os']
