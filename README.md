@@ -48,7 +48,15 @@ For this project, I've used the following software versions. It's expected the p
 
 ### Debian box
 
+At first I was planning on using the latest Debian box available. That is, [debian/stretch64](https://app.vagrantup.com/debian/boxes/stretch64) , but it seems that it needs a newer version of Vagrant to work fine.
+I settled for stability and because of that I used [debian/jessie64](https://app.vagrantup.com/debian/boxes/jessie64), which offers Debian 8.9 with a deserved reputation of stability.
+
 ### Networking
+
+I've configured both machines with an interface in a privat network `192.168.5.0/24` .
+They can see each other, and I have established a port forwarding in the Rails machine, so we can check the app from our browser outside:
+
+    host.vm.network :forwarded_port, guest: 3000, guest_ip: "192.168.5.12", host: 3000, protocol: "tcp"
 
 ### Provisioning: Ansible
 
