@@ -17,10 +17,12 @@
     apt_key:
       keyserver: keyserver.ubuntu.com
       id: F4E3FBBE
+    become: yes
 
   - apt_repository:
       repo: deb http://ppa.launchpad.net/rael-gc/rvm/ubuntu xenial main
       state: present
+    become: yes
 
   - name: RVM package
     apt:
@@ -32,31 +34,29 @@
   # Now we'll install a ruby version as stated in:
   #   https://rvm.io/rubies/installing/
 
-  - name: Ruby 2.3.1 installation with RVM
-    command: /usr/share/rvm/bin/rvm install 2.3.1
+  - name: Ruby 2.3.1 installation and registry with RVM
+    shell: /usr/share/rvm/bin/rvm install 2.3.1 && /usr/share/rvm/bin/rvm use 2.3.1 --default
     args:
       creates: /usr/share/rvm/rubies/ruby-2.3.1/bin/ruby
     become: yes
 
-  - name: Symlink to our Ruby version from /usr/bin/ruby
-    file:
-      src:  /usr/share/rvm/rubies/ruby-2.3.1/bin/ruby
-      dest: /usr/bin/ruby
-      state: link
-
-  - name: Rails installation
-    gem:
-      name: rails
-      state: present
-      executable: /usr/share/rvm/rubies/ruby-2.3.1/bin/gem # env_shebang=yes
+  - name: Getting installed gems
+    shell: PATH=$PATH:/usr/share/rvm/rubies/ruby-2.3.1/bin /usr/share/rvm/rubies/ruby-2.3.1/bin/gem list
+    register: mygems
+    changed_when: false
     become: yes
 
-  - name: Installing gems required for Demo Application
-    gem:
-      name: '{{ item }}'
-      state: present
-      executable: /usr/share/rvm/rubies/ruby-2.3.1/bin/gem # env_shebang=yes
-    with_items:
-      - execjs # https://github.com/rails/execjs
-      - therubyracer
+  - name: Rails installation
+    shell: PATH=$PATH:/usr/share/rvm/rubies/ruby-2.3.1/bin /usr/share/rvm/rubies/ruby-2.3.1/bin/gem install rails
+    when: "'rails' not in mygems.stdout"
+    become: yes
+
+  - name: Installing gem execjs
+    shell: PATH=$PATH:/usr/share/rvm/rubies/ruby-2.3.1/bin /usr/share/rvm/rubies/ruby-2.3.1/bin/gem install execjs
+    when: "'execjs' not in mygems.stdout" # https://github.com/rails/execjs
+    become: yes
+
+  - name: Installing gem therubyracer
+    shell: PATH=$PATH:/usr/share/rvm/rubies/ruby-2.3.1/bin /usr/share/rvm/rubies/ruby-2.3.1/bin/gem install therubyracer
+    when: "'therubyracer' not in mygems.stdout"
     become: yes
