@@ -1,16 +1,10 @@
 # Debian / Ubuntu
-  - name: RoR frontend basic deps on Debian
-    apt: name={{item}} state=latest
-    with_items:
-      - software-properties-common # in order to add PPA repositories
-      - mysql-client # to connect to DB servers
-    become: yes
 
-    # We'd like to use here 'apt_repository' but it's not possible
-    # with ansible 2.0.0.1, so it seems.
-    ##apt_repository:
-    ##  repo: 'ppa:rael-gc/rvm'
-    ##  codename: 'xenial' # workaround for https://github.com/ingomueller-net/ansible-java/commit/c805b8288007a687b5b058f1c746373b77999042
+  # We'd like to use here 'apt_repository' but it's not possible
+  # with ansible 2.0.0.1, so it seems.
+  ##apt_repository:
+  ##  repo: 'ppa:rael-gc/rvm'
+  ##  codename: 'xenial' # workaround for https://github.com/ingomueller-net/ansible-java/commit/c805b8288007a687b5b058f1c746373b77999042
 
   # Repo for https://github.com/rvm/ubuntu_rvm
   - name: RVM repository and key
@@ -24,39 +18,42 @@
       state: present
     become: yes
 
-  - name: RVM package
-    apt:
-      update_cache: yes
-      name: rvm
-      state: latest
+  - name: RVM and other Debian packages
+    apt: name={{item}} state=latest update_cache=yes
+    with_items:
+      - rvm
+      - software-properties-common # in order to add PPA repositories
+      - mysql-client # to connect to DB servers
+      - libmysqlclient-dev # required by MySQL Ruby gem
     become: yes
 
   # Now we'll install a ruby version as stated in:
   #   https://rvm.io/rubies/installing/
-
-  - name: Ruby 2.3.1 installation and registry with RVM
-    shell: /usr/share/rvm/bin/rvm install 2.3.1 && /usr/share/rvm/bin/rvm use 2.3.1 --default
+  - name: Ruby {{ruby_vers}} installation and registry with RVM
+    shell: /usr/share/rvm/bin/rvm install {{ruby_vers}} && /usr/share/rvm/bin/rvm alias create default ruby-{{ruby_vers}} && /usr/share/rvm/bin/rvm use {{ruby_vers}} --default
     args:
-      creates: /usr/share/rvm/rubies/ruby-2.3.1/bin/ruby
+      creates: /usr/share/rvm/rubies/ruby-{{ruby_vers}}/bin/ruby
     become: yes
 
-  - name: Getting installed gems
-    shell: PATH=$PATH:/usr/share/rvm/rubies/ruby-2.3.1/bin /usr/share/rvm/rubies/ruby-2.3.1/bin/gem list
+  # Getting a list of installed gems
+  - shell: PATH=$PATH:/usr/share/rvm/rubies/ruby-{{ruby_vers}}/bin /usr/share/rvm/rubies/ruby-{{ruby_vers}}/bin/gem list
     register: mygems
     changed_when: false
     become: yes
 
-  - name: Rails installation
-    shell: PATH=$PATH:/usr/share/rvm/rubies/ruby-2.3.1/bin /usr/share/rvm/rubies/ruby-2.3.1/bin/gem install rails
-    when: "'rails' not in mygems.stdout"
+  - name: Installing Rails and other required gems
+    shell: PATH=$PATH:/usr/share/rvm/rubies/ruby-{{ruby_vers}}/bin /usr/share/rvm/rubies/ruby-{{ruby_vers}}/bin/gem install {{item}}
+    when: "'{{item}}' not in mygems.stdout"
+    with_items:
+      - rails
+      - execjs
+      - therubyracer
+      - mysql
     become: yes
 
-  - name: Installing gem execjs
-    shell: PATH=$PATH:/usr/share/rvm/rubies/ruby-2.3.1/bin /usr/share/rvm/rubies/ruby-2.3.1/bin/gem install execjs
-    when: "'execjs' not in mygems.stdout" # https://github.com/rails/execjs
-    become: yes
-
-  - name: Installing gem therubyracer
-    shell: PATH=$PATH:/usr/share/rvm/rubies/ruby-2.3.1/bin /usr/share/rvm/rubies/ruby-2.3.1/bin/gem install therubyracer
-    when: "'therubyracer' not in mygems.stdout"
-    become: yes
+# to be done:
+#sample app download (include mysql access)
+# sample app uncompress
+# cd appname 
+# bundle install
+# bin/rails server
