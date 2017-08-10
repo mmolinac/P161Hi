@@ -1,5 +1,5 @@
 # Debian / Ubuntu
-  - name: Rails deps on Debian
+  - name: RoR frontend basic deps on Debian
     apt: name={{item}} state=latest
     with_items:
       - software-properties-common # in order to add PPA repositories
@@ -27,4 +27,36 @@
       update_cache: yes
       name: rvm
       state: latest
+    become: yes
+
+  # Now we'll install a ruby version as stated in:
+  #   https://rvm.io/rubies/installing/
+
+  - name: Ruby 2.3.1 installation with RVM
+    command: /usr/share/rvm/bin/rvm install 2.3.1
+    args:
+      creates: /usr/share/rvm/rubies/ruby-2.3.1/bin/ruby
+    become: yes
+
+  - name: Symlink to our Ruby version from /usr/bin/ruby
+    file:
+      src:  /usr/share/rvm/rubies/ruby-2.3.1/bin/ruby
+      dest: /usr/bin/ruby
+      state: link
+
+  - name: Rails installation
+    gem:
+      name: rails
+      state: present
+      executable: /usr/share/rvm/rubies/ruby-2.3.1/bin/gem # env_shebang=yes
+    become: yes
+
+  - name: Installing gems required for Demo Application
+    gem:
+      name: '{{ item }}'
+      state: present
+      executable: /usr/share/rvm/rubies/ruby-2.3.1/bin/gem # env_shebang=yes
+    with_items:
+      - execjs # https://github.com/rails/execjs
+      - therubyracer
     become: yes
