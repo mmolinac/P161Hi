@@ -1,11 +1,30 @@
 # Debian / Ubuntu
-  - name: Install Rails on Debian
+  - name: Rails deps on Debian
     apt: name={{item}} state=latest
     with_items:
-      - rails
-      - mysql-client
+      - software-properties-common # in order to add PPA repositories
+      - mysql-client # to connect to DB servers
     become: yes
 
-  # - name: Rails service
-  #   service: name=rails enabled=yes state=started
-  #   become: yes
+    # We'd like to use here 'apt_repository' but it's not possible
+    # with ansible 2.0.0.1, so it seems.
+    ##apt_repository:
+    ##  repo: 'ppa:rael-gc/rvm'
+    ##  codename: 'xenial' # workaround for https://github.com/ingomueller-net/ansible-java/commit/c805b8288007a687b5b058f1c746373b77999042
+
+  # Repo for https://github.com/rvm/ubuntu_rvm
+  - name: RVM repository and key
+    apt_key:
+      keyserver: keyserver.ubuntu.com
+      id: F4E3FBBE
+
+  - apt_repository:
+      repo: deb http://ppa.launchpad.net/rael-gc/rvm/ubuntu xenial main
+      state: present
+
+  - name: RVM package
+    apt:
+      update_cache: yes
+      name: rvm
+      state: latest
+    become: yes
