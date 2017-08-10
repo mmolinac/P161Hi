@@ -116,5 +116,6 @@ Vagrant.configure(2) do |config|
   # Here, we'll puppetize / ansibleize every machine.
   config.vm.provision :ansible do |ansible|
     ansible.playbook = "playbooks/main.yml"
+    # ansible.verbose = "vvv" # just in case
   end
 end
