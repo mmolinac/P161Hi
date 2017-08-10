@@ -51,9 +51,3 @@
       - mysql
     become: yes
 
-# to be done:
-#sample app download (include mysql access)
-# sample app uncompress
-# cd appname 
-# bundle install
-# bin/rails server
