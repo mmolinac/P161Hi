@@ -60,17 +60,60 @@ They can see each other, and I have established a port forwarding in the Rails m
 
 ### Provisioning: Ansible
 
+I've chosen Ansible as my configuration management tool because:
+
+- Its provisioner integrates [perfectly with Vagrant](https://www.vagrantup.com/docs/provisioning/ansible.html)
+- Ansible has a lot of modules and even after that, I can use `command` or `shell` to do additional tasks, having it all together as a whole.
+- So then, I can use only one provisioner to do it all
+- Is agentless, so we need no other infrastructure to provision this project. In contrast with the Puppet provisioner, you can do it agent or agentless, but to me makes more sense to use Puppet with a Puppet master, when needed.
+
 ### db1 host
-tell about soft installed and users
-connectivity
+
+As I've been told, MySQL host is the fist one to start up.
+Once it's running, with Ansible we apply a role to it.
+This role can be applied to any number of hosts.
+
+For the purpose of this PoC, I've ommited the customization of some variables and things like that, because we'll only need one host.
+
+- Installation of MySQL server and python-mysqldb (needed by Ansible on the client side).
+- MySQL listener configuration and restart trigger
+- Sample MySQL user created so it can access this DB from other hosts
 
 ### front1 host
-ruby version. rails. gems.
-ports mapped
+
+We've been told that the Rails host should meet some requirements:
+
+- Ruby 2.3.1
+- Rails installed
+- As a consequence, every dependency, being a .deb package or a gem, should be installed previous to the sample application startup.
+
+My chosen Vagrant box packs a Ruby package whose version doesn't meet this requirements, `2.1.5+deb8u2` .
+
+As I'm unfamiliar to Rails for the time being, I've read some about the [alternatives](https://noteits.net/2016/06/10/installing-ruby-2-3-1-on-ubuntu/)
+It seems that Ruby 2.3.1 is a pretty popular version, and fortunately there's plenty of literature about methods to deploy this exact version.
+
+Basically, for me there's three ways to do it:
+
+- `rbenv` . Having a Debian package is my preferred way to do it, but it seems that the packed version of the tool for Debian 8.9 can't meet the installation of Ruby 2.3.1 (only older versions). I'll try to avoid compilation processes in a machine that is supposed to be a production environment.
+- `rvm` is a famous tool to manage Ruby versions. Again, I prefer to use the fewer compilation processes, so I ended following [these instructions](https://rvm.io/rvm/install#ubuntu) to install a .deb package that meets my expectations.
+This is done through a PPA repository, added by Ansible during the provisioning.
+- Source code compilation. As the less desired option, was discarded.
+
+Once `rvm` is installed, there are additional tasks that install the version 2.3.1 specified by var `ruby_vers` . Can be changed to test different environments.
+With a working Ruby environment, I've made a list of the required gems, begining with `rails` and including some gems needed by our sample application.
+
+Now we must download an initial version of a cooked app from somewhere (using Github repo as my personal artifact repository)
+We can use any other, like Nexus or Artifactory.
 
 ### Sample application
 what is done by the app 
 
 ### Application autodeployment
 
+method employed.
+autodownload
+startup scripts
+
 ### Proposed solution to replace the application version.
+
+change variables. redownload. label every version.
