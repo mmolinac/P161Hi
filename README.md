@@ -46,6 +46,8 @@ For this project, I've used the following software versions. It's expected the p
       config file = /etc/ansible/ansible.cfg
       configured module search path = Default w/o overrides
 
+Each Virtualbox VM is provisioned with as many CPU cores as possible. That is, with a maximum as the host machine.
+
 ### Debian box
 
 At first I was planning on using the latest Debian box available. That is, [debian/stretch64](https://app.vagrantup.com/debian/boxes/stretch64) , but it seems that it needs a newer version of Vagrant to work fine.
@@ -95,8 +97,8 @@ It seems that Ruby 2.3.1 is a pretty popular version, and fortunately there's pl
 Basically, for me there's three ways to do it:
 
 - `rbenv` . Having a Debian package is my preferred way to do it, but it seems that the packed version of the tool for Debian 8.9 can't meet the installation of Ruby 2.3.1 (only older versions). I'll try to avoid compilation processes in a machine that is supposed to be a production environment.
-- `rvm` is a famous tool to manage Ruby versions. Again, I prefer to use the fewer compilation processes, so I ended following [these instructions](https://rvm.io/rvm/install#ubuntu) to install a .deb package that meets my expectations.
-This is done through a PPA repository, added by Ansible during the provisioning.
+- `rvm` is a famous tool to manage Ruby versions. Again, I prefer to use the fewer compilation processes, so I ended following [these instructions](https://rvm.io/rvm/install#ubuntu) to install a .deb package that meets my expectations,  __so this will be my choice__.
+It is done through a PPA repository, added by Ansible during the provisioning.
 - Source code compilation. As the less desired option, was discarded.
 
 Once `rvm` is installed, there are additional tasks that install the version 2.3.1 specified by var `ruby_vers` . Can be changed to test different environments.
@@ -106,9 +108,23 @@ Now we must download an initial version of a cooked app from somewhere (using Gi
 We can use any other, like Nexus or Artifactory.
 
 ### Sample application
-what is done by the app 
+I've followed [this quick tutorial](http://iridakos.com/2013/11/24/saying-hello-world-with-ruby-on-rails.html) to build a sample application.
+
+Steps:
+
+- `rails new sampleapp --database=mysql`
+- `cd sampleapp`
+- edited config/database.yml with our information about host db1
+- `rails generate controller pages`
+- edited `app/controllers/pages_controller.rb` to say "Hi P161"
+- Created the file `app/views/pages/home.html.erb`
+- edited `config/routes`
+
+I added a script to perform certain tasks with `bundle` after we uncompress the sampleapp.tgz downloaded file.
 
 ### Application autodeployment
+
+I wrapped both the sampleapp Rails application and a script to perform as much tasks as we want, versioned for each tar file.
 
 method employed.
 autodownload
