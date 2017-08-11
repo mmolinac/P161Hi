@@ -48,6 +48,9 @@
       - rails
       - execjs
       - therubyracer
-      - mysql
+      - mysql2
+      - rack
+      - sprockets
+      - railties
     become: yes
 
