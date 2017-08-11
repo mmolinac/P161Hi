@@ -54,3 +54,24 @@
       - railties
     become: yes
 
+  - name: Download of {{app_name}}-{{app_vers}}.tgz
+    get_url:
+      url: '{{app_repo}}/{{app_name}}-{{app_vers}}.tgz'
+      dest: '/home/vagrant/{{app_name}}-{{app_vers}}.tgz'
+      owner: vagrant
+      group: vagrant
+      mode: 0500
+  
+  - name: Uncompressing {{app_name}}-{{app_vers}}.tgz
+    shell: tar xzf /home/vagrant/{{app_name}}-{{app_vers}}.tgz
+    args:
+      chdir: /home/vagrant
+      creates: /home/vagrant/{{app_name}}-{{app_vers}}.sh
+    become_user: vagrant
+    
+  - name: Autodeploy tasks for {{app_name}}-{{app_vers}}
+    shell: PATH=$PATH:/usr/share/rvm/rubies/ruby-{{ruby_vers}}/bin /home/vagrant/{{app_name}}-{{app_vers}}.sh
+    args:
+      chdir: /home/vagrant
+      creates: /home/vagrant/{{app_name}}-{{app_vers}}.sh.ready
+    become_user: vagrant
