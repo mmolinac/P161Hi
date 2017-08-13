@@ -1,0 +1,17 @@
+{# Borrowed from https://mikewilliamson.wordpress.com/2015/08/26/running-a-rails-app-with-systemd-and-liking-it/ #}
+[Unit]
+Description={{ app_name }} Rails app
+Requires=network.target
+ 
+[Service]
+Type=simple
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory=/home/{{ app_user }}/{{ app_name }}
+ExecStart=/bin/bash -lc 'bundle exec rails server'
+TimeoutSec=30
+RestartSec=15s
+Restart=always
+ 
+[Install]
+WantedBy=multi-user.target

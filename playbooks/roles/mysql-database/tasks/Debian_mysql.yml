@@ -20,7 +20,7 @@
   - mysql_user:
       name: frontuser
       password: '12345'
-      host: '192.168.5.12'
+      host: '192.168.5.%' # Permission to all hosts in the subnet
       priv: '*.*:ALL'
       state: present
 

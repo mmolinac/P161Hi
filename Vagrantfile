@@ -16,8 +16,6 @@ Vagrant.configure(2) do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://atlas.hashicorp.com/search.
-  #config.vm.box = "debian/stretch64" # is not able to use "private_network"
-  # config.vm.box = "amonteilhet/debian-stretch64" # virtualbox modules too modern
   config.vm.box = "debian/jessie64"
 
   # Disable automatic box update checking. If you disable this, then
