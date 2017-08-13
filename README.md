@@ -31,6 +31,19 @@ There will be two Debian 8 hosts.
 The first one running a MySQL database, listening the public interface.
 The second one will run a Ruby on Rails stack and could access the database services on the former.
 
+Way to use this project:
+
+- Clone this repository onto your working environment:
+
+    $ git clone https://github.com/mmolinac/P161Hi.git
+
+- Start the project:
+
+    $ cd P161Hi
+    $ vagrant up
+
+- After the deployment of the two VMs, you can use the app, pointing your web broser to `http://127.0.0.1:3000`
+
 ### Vagrant
 
 For this project, I've used the following software versions. It's expected the project works with newer ones.
@@ -91,6 +104,8 @@ We've been told that the Rails host should meet some requirements:
 - Rails installed
 - As a consequence, every dependency, being a .deb package or a gem, should be installed previous to the sample application startup.
 
+Besides, we'll create a user to run the application, and will be specified as a setting inside the Ansible playbook. Defaults to `ruby`, password `ruby`
+
 My chosen Vagrant box packs a Ruby package whose version doesn't meet this requirements, `2.1.5+deb8u2` .
 
 As I'm unfamiliar to Rails for the time being, I've read some about the [alternatives](https://noteits.net/2016/06/10/installing-ruby-2-3-1-on-ubuntu/)
@@ -103,10 +118,12 @@ Basically, for me there's three ways to do it:
 It is done through a PPA repository, added by Ansible during the provisioning.
 - Source code compilation. As the less desired option, was discarded.
 
-Once `rvm` is installed, there are additional tasks that install the version 2.3.1 specified by var `ruby_vers` . Can be changed to test different environments.
-With a working Ruby environment, I've made a list of the required gems, begining with `rails` and including some gems needed by our sample application.
+Once `rvm` is installed, there are additional tasks that install the version 2.3.1 specified by var `ruby_vers` in the Ansible playbook. Can be changed to test different environments.
+With a working Ruby environment, I've only installed gem `rails` system-wide.
+The rest of the gem needed by the application will be installed inside the user's home folder.
+Check [this paragraph](#Application autodeployment) to know how it's done.
 
-Now we must download an initial version of a cooked app from somewhere (using Github repo as my personal artifact repository)
+Now we must download an initial version of a cooked app from somewhere (using my Github repo as my personal artifact repository)
 We can use any other, like Nexus or Artifactory.
 
 ### Sample application
@@ -122,28 +139,88 @@ Steps:
 - Created the file `app/views/pages/home.html.erb`
 - edited `config/routes`
 
+__The sample application has been generated in my laptop, and will be in a remote repository before Vagrant starts__
+
 I added a script to perform certain tasks with `bundle` after we uncompress the sampleapp.tgz downloaded file.
+
+    #!/bin/sh
+    # Autodeployment of Rails sampleapp
+    #
+    script_name=$0
+    base=`dirname $(readlink -f $script_name)`
+    cd ${base}/sampleapp
+    echo "Bundle install ..."
+    bundle install --path vendor/bundle
+    install_err=$?
+    echo "Database creation/migration ..."
+    bundle exec rake db:create
+    db_err=$?
+    if [ $install_err -eq 0 -a $db_err -eq 0 ]; then
+      echo "Deployment OK."
+      cd $base
+      touch ${script_name}.ready
+    else
+      echo "Deployment error."
+      exit 2
+    fi
+
+The script is very simple, but it's tied to their app version, so every version can be installed from inside Ansible playbook or by hand, and leaves a trace for this exact version.
+Either way, if the autodeployment process goes well, every subsequent Ansible provision won't try to redeploy.
 
 ### Application autodeployment
 
 I wrapped both the sampleapp Rails application and a script to perform as much tasks as we want, versioned for each tar file.
 
-user chosen: ruby
-method employed.
-autodownload
+By default, the artifact whose version is chosen will be downloaded from a repository set in the Ansible playbook. Of course, the repository, the name and appliation version can be changed at the user's discretion.
 
-autodeploy scripts explained
-locally installed 'bundle'
-startup scripts
+The deployment of the artifact is mandatory only the first time, because a system service will be set on top of that.
+
+Every ansible execution after that will not result in actions taken if there's a correct application running.
 
 ### Proposed solution to replace the application version.
 
-change variables to do it. redownload. label every version.
+I propose two different ways to replace the running application.
+
+- Fist, if you change application version in file `playbooks/roles/rails-frontend/vars/main.yml`, and issue `vagrant provision`, it will download other version from the repository and run the autodeployment script if needed.
+
+- Second way: you can do it by hand. I'll give you an example to deploy a version of the application that shows another message:
+
+    $ vagrant ssh front1
+...
+    vagrant@front1:~$ sudo systemctl stop sampleapp.service
+    vagrant@front1:~$ sudo su - ruby
+    ruby@front1:~$ wget -c https://github.com/mmolinac/P161Hi/raw/master/sampleapp-1.1.0.tgz
+...
+    ruby@front1:~$ tar xzf sampleapp-1.1.0.tgz 
+    ruby@front1:~$ ./sampleapp-1.1.0.sh 
+    Bundle install ...
+...
+    Bundle complete! 12 Gemfile dependencies, 47 gems now installed.
+    Bundled gems are installed into ./vendor/bundle.
+    Database creation/migration ...
+    sampleapp_development already exists
+    sampleapp_test already exists
+    Deployment OK.
+    ruby@front1:~$ exit
+    logout
+    vagrant@front1:~$ sudo systemctl start sampleapp.service
+
+And that's it!
 
 ### Final notes
 
-deployment notes. balance between what Ansible do and what the deployment script do
+There are different approaches that can be reached, depending of the deployment tools we had and other technical choices already taken (stacks, coding conventions, team best-practices ...)
+Besides of being partisan of a certain approach, I think this project is flexible enough to be taken as a start point for possible improvements and adaptations to a team with a well established working agreements.
 
-different methods of replacing app
+Regarding the autodeployment structure, I've chosen a certain packing method, but it's obvious that depending of the project, you would need to install more software system-wide, or include additional tasks in the deployment script. I tend to find a balance of where and how to do things when I take the requirements for the project.
 
-development stack: ubuntu 16.04 + versions of vagrant + virtualbox + git + editor + ...
+This project has been developed with this software stack:
+
+OS: Ubuntu 16.04.3 LTS
+Kernel: 4.4.0-91-generic #114-Ubuntu SMP
+Vagrant: Vagrant 1.8.1 (Ubuntu repository)
+Ansible: ansible 2.0.0.2 (Ubuntu repository)
+Virtualbox: 5.0.40-dfsg-0ubuntu1.16.04.1
+Git: 2.7.4-0ubuntu1.2
+IDE: Visual Studio Code 1.15.0
+
