@@ -1,5 +1,19 @@
 # Debian / Ubuntu
 
+  - name: Application user and group
+    group:
+      name: '{{app_group}}'
+      state: present
+    become: yes
+
+  - user:
+      name: '{{app_user}}'
+      group: '{{app_group}}'
+      shell: /bin/bash
+      password: '{{app_user_pw}}'
+      update_password: always
+    become: yes
+
   # We'd like to use here 'apt_repository' but it's not possible
   # with ansible 2.0.0.1, so it seems.
   ##apt_repository:
@@ -48,18 +62,6 @@
     with_items:
       - rails
     become_user: root -i
-
-  - name: Application user and group
-    group:
-      name: '{{app_group}}'
-      state: present
-    become: yes
-
-  - user:
-      name: '{{app_user}}'
-      group: '{{app_group}}'
-      shell: /bin/bash
-    become: yes
 
   # Download sampleapp-a.b.c.tgz
   - name: Download of {{app_name}}-{{app_vers}}.tgz
