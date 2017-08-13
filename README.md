@@ -22,7 +22,7 @@ Vagrant and Virtualbox are mandatory. Running `vagrant up` and checking the mess
 
 We are free to use any CM tool.
 
-Plan a redeployment strategy.
+As a side plot, I have to plan a redeployment strategy.
 
 ## Proposed solution
 
@@ -57,7 +57,7 @@ Whichever Debian version I choose, I have the certainty that I can trust in its 
 
 ### Networking
 
-I've configured both machines with an interface in a privat network `192.168.5.0/24` .
+I've configured both machines with an interface in a private network `192.168.5.0/24` .
 They can see each other, and I have established a port forwarding in the Rails machine, so we can check the app from our browser outside:
 
     host.vm.network :forwarded_port, guest: 3000, guest_ip: "192.168.5.12", host: 3000, protocol: "tcp"
