@@ -186,6 +186,8 @@ I propose two different ways to replace the running application.
 
 - Second way: you can do it by hand. I'll give you an example to deploy a version of the application that shows another message:
 
+(start this from your user's shell)
+
     $ vagrant ssh front1
 
     vagrant@front1:~$ sudo systemctl stop sampleapp.service
