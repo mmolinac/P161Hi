@@ -89,10 +89,12 @@
     args:
       chdir: /home/{{app_user}}
       creates: /home/{{app_user}}/{{app_name}}-{{app_vers}}.sh.ready
+    notify:
+      - application restart
     become_user: '{{app_user}} -i'
 
   # Creation of startup scripts
-  - name: Start systemd service for {{app_name}}
+  - name: systemd service for {{app_name}}
     template:
       src: "app.service.j2"
       dest: /lib/systemd/system/{{app_name}}.service
