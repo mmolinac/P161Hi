@@ -126,10 +126,20 @@ I added a script to perform certain tasks with `bundle` after we uncompress the 
 
 I wrapped both the sampleapp Rails application and a script to perform as much tasks as we want, versioned for each tar file.
 
+user chosen: ruby
 method employed.
 autodownload
+
+autodeploy scripts explained
+locally installed 'bundle'
 startup scripts
 
 ### Proposed solution to replace the application version.
 
-change variables. redownload. label every version.
+change variables to do it. redownload. label every version.
+
+### Final notes
+
+deployment notes. balance between what Ansible do and what the deployment script do
+
+different methods of replacing app
