@@ -210,9 +210,10 @@ And that's it!
 ### Final notes
 
 There are different approaches that can be reached, depending of the deployment tools we had and other technical choices already taken (stacks, coding conventions, team best-practices ...)
-Besides of being partisan of a certain approach, I think this project is flexible enough to be taken as a start point for possible improvements and adaptations to a team with a well established working agreements.
+Besides of being partisan of a certain approach, I think this project is flexible enough to be taken as a start point for possible improvements and adaptations to a team with well established working agreements.
 
 Regarding the autodeployment structure, I've chosen a certain packing method, but it's obvious that depending of the project, you would need to install more software system-wide, or include additional tasks in the deployment script. I tend to find a balance of where and how to do things when I take the requirements for the project.
+For instance, one improvement would be to include the version of the app inside the app folder, somehow. This way, Ansible could check not only if there's one application, but if it's the required one, or download on top of that folder.
 
 This project has been developed with this software stack:
 
