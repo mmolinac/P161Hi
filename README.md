@@ -40,6 +40,7 @@ Way to use this project:
 - Start the project:
 
     $ cd P161Hi
+    
     $ vagrant up
 
 - After the deployment of the two VMs, you can use the app, pointing your web broser to `http://127.0.0.1:3000`
