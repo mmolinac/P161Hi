@@ -53,6 +53,8 @@ Each Virtualbox VM is provisioned with as many CPU cores as possible. That is, w
 At first I was planning on using the latest Debian box available. That is, [debian/stretch64](https://app.vagrantup.com/debian/boxes/stretch64) , but it seems that it needs a newer version of Vagrant to work fine.
 I settled for stability and because of that I used [debian/jessie64](https://app.vagrantup.com/debian/boxes/jessie64), which offers Debian 8.9 with a deserved reputation of stability.
 
+Whichever Debian version I choose, I have the certainty that I can trust in its tight and reliable dependency system to, in turn, having every dependency of a single page just met with an install command.
+
 ### Networking
 
 I've configured both machines with an interface in a privat network `192.168.5.0/24` .
@@ -143,3 +145,5 @@ change variables to do it. redownload. label every version.
 deployment notes. balance between what Ansible do and what the deployment script do
 
 different methods of replacing app
+
+development stack: ubuntu 16.04 + versions of vagrant + virtualbox + git + editor + ...
