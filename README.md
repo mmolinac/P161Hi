@@ -40,7 +40,7 @@ Way to use this project:
 - Start the project:
 
     $ cd P161Hi
-    
+
     $ vagrant up
 
 - After the deployment of the two VMs, you can use the app, pointing your web broser to `http://127.0.0.1:3000`
@@ -60,7 +60,7 @@ For this project, I've used the following software versions. It's expected the p
       config file = /etc/ansible/ansible.cfg
       configured module search path = Default w/o overrides
 
-Each Virtualbox VM is provisioned with as many CPU cores as possible. That is, with a maximum as the host machine.
+Each Virtualbox VM is provisioned automatically by Vagrant with as many CPU cores as possible. That is, with the maximum as the host machine allows.
 
 ### Debian box
 
@@ -87,7 +87,7 @@ I've chosen Ansible as my configuration management tool because:
 
 ### db1 host
 
-As I've been told, MySQL host is the fist one to start up.
+As I've been told, MySQL host should be the fist one to start up.
 Once it's running, with Ansible we apply a role to it.
 This role can be applied to any number of hosts.
 
@@ -103,7 +103,7 @@ We've been told that the Rails host should meet some requirements:
 
 - Ruby 2.3.1
 - Rails installed
-- As a consequence, every dependency, being a .deb package or a gem, should be installed previous to the sample application startup.
+- As a consequence, every dependency, being a .deb package or a gem, should be installed prior to the sample application startup.
 
 Besides, we'll create a user to run the application, and will be specified as a setting inside the Ansible playbook. Defaults to `ruby`, password `ruby`
 
@@ -122,10 +122,10 @@ It is done through a PPA repository, added by Ansible during the provisioning.
 Once `rvm` is installed, there are additional tasks that install the version 2.3.1 specified by var `ruby_vers` in the Ansible playbook. Can be changed to test different environments.
 With a working Ruby environment, I've only installed gem `rails` system-wide.
 The rest of the gem needed by the application will be installed inside the user's home folder.
-Check [this paragraph](#Application autodeployment) to know how it's done.
+Check __Application autodeployment__ to know how it's done.
 
 Now we must download an initial version of a cooked app from somewhere (using my Github repo as my personal artifact repository)
-We can use any other, like Nexus or Artifactory.
+We could have used any other, like Nexus or Artifactory.
 
 ### Sample application
 I've followed [this quick tutorial](http://iridakos.com/2013/11/24/saying-hello-world-with-ruby-on-rails.html) to build a sample application.
@@ -170,7 +170,7 @@ Either way, if the autodeployment process goes well, every subsequent Ansible pr
 
 ### Application autodeployment
 
-I wrapped both the sampleapp Rails application and a script to perform as much tasks as we want, versioned for each tar file.
+I wrapped both the sampleapp Rails application and a script to perform as much tasks as we want, versioned for each tar.gz file.
 
 By default, the artifact whose version is chosen will be downloaded from a repository set in the Ansible playbook. Of course, the repository, the name and appliation version can be changed at the user's discretion.
 
@@ -178,7 +178,7 @@ The deployment of the artifact is mandatory only the first time, because a syste
 
 Every ansible execution after that will not result in actions taken if there's a correct application running.
 
-### Proposed solution to replace the application version.
+### Proposed solution to deploy another version.
 
 I propose two different ways to replace the running application.
 
@@ -187,15 +187,15 @@ I propose two different ways to replace the running application.
 - Second way: you can do it by hand. I'll give you an example to deploy a version of the application that shows another message:
 
     $ vagrant ssh front1
-...
+
     vagrant@front1:~$ sudo systemctl stop sampleapp.service
     vagrant@front1:~$ sudo su - ruby
     ruby@front1:~$ wget -c https://github.com/mmolinac/P161Hi/raw/master/sampleapp-1.1.0.tgz
-...
+
     ruby@front1:~$ tar xzf sampleapp-1.1.0.tgz 
     ruby@front1:~$ ./sampleapp-1.1.0.sh 
     Bundle install ...
-...
+
     Bundle complete! 12 Gemfile dependencies, 47 gems now installed.
     Bundled gems are installed into ./vendor/bundle.
     Database creation/migration ...
@@ -219,10 +219,16 @@ For instance, one improvement would be to include the version of the app inside 
 This project has been developed with this software stack:
 
 OS: Ubuntu 16.04.3 LTS
+
 Kernel: 4.4.0-91-generic #114-Ubuntu SMP
+
 Vagrant: Vagrant 1.8.1 (Ubuntu repository)
+
 Ansible: ansible 2.0.0.2 (Ubuntu repository)
+
 Virtualbox: 5.0.40-dfsg-0ubuntu1.16.04.1
+
 Git: 2.7.4-0ubuntu1.2
+
 IDE: Visual Studio Code 1.15.0
 
