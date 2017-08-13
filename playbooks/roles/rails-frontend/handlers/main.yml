@@ -3,6 +3,6 @@
   command: systemctl daemon-reload
   become: yes
 
-- name: restart {{app_name}}
+- name: application restart
   service: name={{app_name}} state=restarted
   become: yes
