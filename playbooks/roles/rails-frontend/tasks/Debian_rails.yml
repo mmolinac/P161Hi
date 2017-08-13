@@ -30,48 +30,77 @@
   # Now we'll install a ruby version as stated in:
   #   https://rvm.io/rubies/installing/
   - name: Ruby {{ruby_vers}} installation and registry with RVM
-    shell: /usr/share/rvm/bin/rvm install {{ruby_vers}} && /usr/share/rvm/bin/rvm alias create default ruby-{{ruby_vers}} && /usr/share/rvm/bin/rvm use {{ruby_vers}} --default
+    shell: rvm install {{ruby_vers}} && rvm alias create default ruby-{{ruby_vers}} && rvm use {{ruby_vers}} --default
     args:
       creates: /usr/share/rvm/rubies/ruby-{{ruby_vers}}/bin/ruby
-    become: yes
+    become_user: root -i # From now on, we're using this to load all the environment, as an interactive shell
 
-  # Getting a list of installed gems
-  - shell: PATH=$PATH:/usr/share/rvm/rubies/ruby-{{ruby_vers}}/bin /usr/share/rvm/rubies/ruby-{{ruby_vers}}/bin/gem list
+  # Getting a list of installed gems, so we can figure out which of them aren't installed yet
+  - shell: gem list
     register: mygems
     changed_when: false
-    become: yes
+    become_user: root -i
 
-  - name: Installing Rails and other required gems
-    shell: PATH=$PATH:/usr/share/rvm/rubies/ruby-{{ruby_vers}}/bin /usr/share/rvm/rubies/ruby-{{ruby_vers}}/bin/gem install {{item}}
+  # Installing gems, system-wide
+  - name: Installing Rails and other system-wide base gems (if required)
+    shell: gem install {{item}}
     when: "'{{item}}' not in mygems.stdout"
     with_items:
       - rails
-      - execjs
-      - therubyracer
-      - mysql2
-      - rack
-      - sprockets
-      - railties
+    become_user: root -i
+
+  - name: Application user and group
+    group:
+      name: '{{app_group}}'
+      state: present
     become: yes
 
+  - user:
+      name: '{{app_user}}'
+      group: '{{app_group}}'
+      shell: /bin/bash
+    become: yes
+
+  # Download sampleapp-a.b.c.tgz
   - name: Download of {{app_name}}-{{app_vers}}.tgz
     get_url:
       url: '{{app_repo}}/{{app_name}}-{{app_vers}}.tgz'
-      dest: '/home/vagrant/{{app_name}}-{{app_vers}}.tgz'
-      owner: vagrant
-      group: vagrant
+      dest: /home/{{app_user}}/{{app_name}}-{{app_vers}}.tgz
+      owner: '{{app_user}}'
+      group: '{{app_group}}'
       mode: 0500
-  
+
+  # Uncompress of the application
   - name: Uncompressing {{app_name}}-{{app_vers}}.tgz
-    shell: tar xzf /home/vagrant/{{app_name}}-{{app_vers}}.tgz
-    args:
-      chdir: /home/vagrant
-      creates: /home/vagrant/{{app_name}}-{{app_vers}}.sh
-    become_user: vagrant
+    unarchive:
+      src: /home/{{app_user}}/{{app_name}}-{{app_vers}}.tgz
+      dest: /home/{{app_user}}
+      copy: no
+      owner: '{{app_user}}'
+      group: '{{app_group}}'
+      creates: /home/{{app_user}}/{{app_name}}-{{app_vers}}.sh
+    become: yes
     
+  # Post-installation tasks, taken from attached script sampleapp-a.b.c.sh
   - name: Autodeploy tasks for {{app_name}}-{{app_vers}}
-    shell: PATH=$PATH:/usr/share/rvm/rubies/ruby-{{ruby_vers}}/bin /home/vagrant/{{app_name}}-{{app_vers}}.sh
+    shell: /home/{{app_user}}/{{app_name}}-{{app_vers}}.sh
     args:
-      chdir: /home/vagrant
-      creates: /home/vagrant/{{app_name}}-{{app_vers}}.sh.ready
-    become_user: vagrant
+      chdir: /home/{{app_user}}
+      creates: /home/{{app_user}}/{{app_name}}-{{app_vers}}.sh.ready
+    become_user: '{{app_user}} -i'
+
+  # Creation of startup scripts
+  - name: Start systemd service for {{app_name}}
+    template:
+      src: "app.service.j2"
+      dest: /lib/systemd/system/{{app_name}}.service
+      owner: root
+      group: root
+      mode: 0644
+    notify:
+      - reload systemd
+    become: yes
+
+  # Register the sampleapp systemd service
+  - service: name={{app_name}} enabled=yes state=started
+    become: yes

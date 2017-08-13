@@ -1,5 +1,7 @@
 ---
 ruby_vers: '2.3.1'
-app_repo: 'https://github.com/mmolinac/P161Hi/raw/master'
-app_name: 'sampleapp'
-app_vers: '1.0.3'
+app_repo:  'https://github.com/mmolinac/P161Hi/raw/master'
+app_name:  'sampleapp'
+app_vers:  '1.0.4'
+app_user:  'ruby'
+app_group: 'ruby'
