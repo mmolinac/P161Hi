@@ -113,6 +113,28 @@ Vagrant.configure(2) do |config|
     end
   end
 
+
+  # Apache machine
+  config.vm.define :fronta1 do |host|
+    host.vm.hostname = "fronta1.#{$domain_name}"
+    host.vm.network :private_network, ip: "192.168.5.13"
+    # Port mapping for default Rails application
+    host.vm.network :forwarded_port, guest: 80, guest_ip: "192.168.5.13", host: 8080, protocol: "tcp"
+    host.vm.provider "virtualbox" do |vbox|
+      # Number of CPUs
+      host = RbConfig::CONFIG['host_os']
+      if host =~ /darwin/
+        cpus = `sysctl -n hw.ncpu`.to_i
+      elsif host =~ /linux/
+        cpus = `nproc`.to_i
+      else # Windows or anything else ...
+        cpus = 2
+      end
+      vbox.memory = 512
+      vbox.cpus = cpus
+    end
+  end
+
   # Here, we'll puppetize / ansibleize every machine.
   config.vm.provision :ansible do |ansible|
     ansible.playbook = "playbooks/main.yml"
