@@ -20,3 +20,9 @@
   become: true
   roles:
     - rails-frontend
+
+# Fron-end with Apache
+- hosts: fronta1
+  become: true
+  roles:
+    - apache-frontend
