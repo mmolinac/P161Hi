@@ -8,6 +8,7 @@
         cache_valid_time: 10800
         name: python-apt # for every host
       become: yes
+      when: ( ansible_os_family == "Debian")
 
 # Database hosts
 - hosts: db1
@@ -20,9 +21,3 @@
   become: true
   roles:
     - rails-frontend
-
-# Fron-end with Apache
-- hosts: fronta1
-  become: true
-  roles:
-    - apache-frontend
