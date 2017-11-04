@@ -1,0 +1,6 @@
+---
+rvm_pkgs:
+  - rvm
+  - software-properties-common # in order to add PPA repositories
+  - mysql-client # to connect to DB servers
+  - libmysqlclient-dev # required by MySQL Ruby gem

@@ -1,4 +1,122 @@
 ---
 # Rails frontend role
-- name: Provisioning a Rails frontend host
-  include: "{{ ansible_os_family }}_rails.yml"
+- name: Provisioning a Rails frontend host {{ ansible_os_family }}
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_os_family }}.yml"
+    - "default.yml"
+
+- name: Application user and group
+  group:
+    name: '{{app_group}}'
+    state: present
+  become: yes
+
+- user:
+    name: '{{app_user}}'
+    group: '{{app_group}}'
+    shell: /bin/bash
+    password: '{{app_user_pw}}'
+    update_password: always
+  become: yes
+
+# We'd like to use here 'apt_repository' but it's not possible
+# with ansible 2.0.0.1, so it seems.
+## TO BE DONE
+##apt_repository:
+##  repo: 'ppa:rael-gc/rvm'
+##  codename: 'xenial' # workaround for https://github.com/ingomueller-net/ansible-java/commit/c805b8288007a687b5b058f1c746373b77999042
+
+# Repo for https://github.com/rvm/ubuntu_rvm
+- name: RVM repository and key
+  apt_key:
+    keyserver: keyserver.ubuntu.com
+    id: F4E3FBBE
+  become: yes
+  when: ( ansible_os_family == "Debian")
+
+- apt_repository:
+    repo: deb http://ppa.launchpad.net/rael-gc/rvm/ubuntu xenial main
+    state: present
+  become: yes
+  when: ( ansible_os_family == "Debian")
+
+# Update APT repository afterwards:
+- apt:
+    update_cache: yes
+    cache_valid_time: 10800
+  become: yes
+  when: ( ansible_os_family == "Debian")
+
+- name: RVM and other {{ ansible_os_family }} packages
+  package: name={{item}} state=latest
+  with_items: "{{rvm_pkgs}}"
+  become: yes
+
+# Now we'll install a ruby version as stated in:
+#   https://rvm.io/rubies/installing/
+- name: Ruby {{ruby_vers}} installation and registry with RVM
+  shell: rvm install {{ruby_vers}} && rvm alias create default ruby-{{ruby_vers}} && rvm use {{ruby_vers}} --default
+  args:
+    creates: /usr/share/rvm/rubies/ruby-{{ruby_vers}}/bin/ruby
+  become_user: root -i # From now on, we're using this to load all the environment, as an interactive shell
+
+# Getting a list of installed gems, so we can figure out which of them aren't installed yet
+- shell: gem list
+  register: mygems
+  changed_when: false
+  become_user: root -i
+
+# Installing gems, system-wide
+- name: Installing Rails and other system-wide base gems (if required)
+  shell: gem install {{item}}
+  when: "'{{item}}' not in mygems.stdout"
+  with_items:
+    - rails
+  become_user: root -i
+
+# Download sampleapp-a.b.c.tgz
+- name: Download of {{app_name}}-{{app_vers}}.tgz
+  get_url:
+    url: '{{app_repo}}/{{app_name}}-{{app_vers}}.tgz'
+    dest: /home/{{app_user}}/{{app_name}}-{{app_vers}}.tgz
+    owner: '{{app_user}}'
+    group: '{{app_group}}'
+    mode: 0500
+
+# Uncompress of the application
+- name: Uncompressing {{app_name}}-{{app_vers}}.tgz
+  unarchive:
+    src: /home/{{app_user}}/{{app_name}}-{{app_vers}}.tgz
+    dest: /home/{{app_user}}
+    copy: no
+    owner: '{{app_user}}'
+    group: '{{app_group}}'
+    creates: /home/{{app_user}}/{{app_name}}-{{app_vers}}.sh
+  become: yes
+  
+# Post-installation tasks, taken from attached script sampleapp-a.b.c.sh
+- name: Autodeploy tasks for {{app_name}}-{{app_vers}}
+  shell: /home/{{app_user}}/{{app_name}}-{{app_vers}}.sh
+  args:
+    chdir: /home/{{app_user}}
+    creates: /home/{{app_user}}/{{app_name}}-{{app_vers}}.sh.ready
+  notify:
+    - application restart
+  become_user: '{{app_user}} -i'
+
+# Creation of startup scripts
+- name: systemd service for {{app_name}}
+  template:
+    src: "app.service.j2"
+    dest: /lib/systemd/system/{{app_name}}.service
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - reload systemd
+  become: yes
+
+# Register the sampleapp systemd service
+- service: name={{app_name}} enabled=yes state=started
+  become: yes
