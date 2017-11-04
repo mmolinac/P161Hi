@@ -1,8 +1,0 @@
-# Redhat / CentOS.
-  - name: Install MariaDB server Redhat
-    yum: name=mariadb-server state=latest
-    become: yes
-
-  - name: MariaDB service
-    service: name=mariadb enabled=yes state=started
-    become: yes

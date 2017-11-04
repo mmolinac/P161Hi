@@ -1,0 +1,8 @@
+---
+mysql_pkgs:
+  - mysql-server
+  - python-mysqldb # Needed for configuring users
+mysql_service: mysql
+
+mysql_src: "debian_my_cnf.j2"
+mysql_dest: /etc/mysql/my.cnf

@@ -1,0 +1,8 @@
+---
+mysql_pkgs:
+  - mariadb-server
+mysql_service: mariadb
+
+# To be completed
+mysql_src: "debian_my_cnf.j2"
+mysql_dest: /etc/mysql/my.cnf

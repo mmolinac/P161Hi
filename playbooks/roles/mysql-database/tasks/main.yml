@@ -1,4 +1,34 @@
 ---
 # MySQL database role
 - name: Provisioning a MySQL database host
-  include: "{{ ansible_os_family }}_mysql.yml"
+  include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_os_family }}.yml"
+    - "default.yml"
+
+- name: Install MySQL server {{ ansible_os_family }}
+  package: name={{item}} state=latest
+  with_items: "{{mysql_pkgs}}"
+  become: yes
+
+- name: MySQL configuration
+  template:
+    src:   "{{ mysql_src }}"
+    dest:  "{{ mysql_dest }}"
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart mysql-server
+  become: yes
+
+- mysql_user:
+    name: frontuser
+    password: '12345'
+    host: '192.168.5.%' # Permission to all hosts in the subnet
+    priv: '*.*:ALL'
+    state: present
+
+- name: MySQL service
+  service: name={{mysql_service}} enabled=yes state=started
+  become: yes
