@@ -1,4 +1,0 @@
----
-# Rails frontend role
-- name: Provisioning a Rails frontend host
-  include: "{{ ansible_os_family }}_apache.yml"
